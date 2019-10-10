@@ -55,7 +55,7 @@ Author : Tetsunari Sumiyoshi
 ■DSWの使い方
 
   1. Cppcheckをインストールします
-      SourceForge(http://cppcheck.sourceforge.net/)またはCppcheck_installer内のインストーラを使用してください。
+      SourceForge( http://cppcheck.sourceforge.net/ )またはCppcheck_installer内のインストーラを使用してください。
 
   2. DynamicSourceWatcher.exe.config の name="workdir" のvalue値に、解析対象のフォルダパスを絶対パスで指定します。
 
