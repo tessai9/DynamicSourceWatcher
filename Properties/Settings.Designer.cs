@@ -25,7 +25,7 @@ namespace DynamicSourceWatcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\work")]
         public string workdir {
             get {
                 return ((string)(this["workdir"]));
@@ -44,6 +44,30 @@ namespace DynamicSourceWatcher.Properties {
             }
             set {
                 this["cppcheck_exe"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("warning,style")]
+        public string checklevel {
+            get {
+                return ((string)(this["checklevel"]));
+            }
+            set {
+                this["checklevel"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("vs")]
+        public string format {
+            get {
+                return ((string)(this["format"]));
+            }
+            set {
+                this["format"] = value;
             }
         }
     }

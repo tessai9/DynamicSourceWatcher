@@ -13,6 +13,7 @@ namespace DynamicSourceWatcher
     class Watcher
     {
         bool executed;
+        String deletedFile;
 
         static void Main()
         {
@@ -24,6 +25,7 @@ namespace DynamicSourceWatcher
         {
             FileSystemWatcher fsw = new FileSystemWatcher();
             this.executed = false;
+            this.deletedFile = "";
 
             // 監視対象のフォルダが存在しているか
             if (!Directory.Exists(Properties.Settings.Default.workdir))
@@ -44,10 +46,13 @@ namespace DynamicSourceWatcher
             fsw.IncludeSubdirectories = true;
             fsw.EnableRaisingEvents = true;
             fsw.Changed += OnChanged;
-            fsw.NotifyFilter = System.IO.NotifyFilters.LastWrite;
+            fsw.Deleted += OnDeleted;
+            fsw.Renamed += OnRenamed;
+            fsw.NotifyFilter = NotifyFilters.LastWrite
+                               | NotifyFilters.FileName;
 
             Console.WriteLine("=================================");
-            Console.WriteLine("Dynamic Cpp Check");
+            Console.WriteLine("Dynamic Source Watcher");
             Console.WriteLine("詳細はReadme.txtを見てください。");
             Console.WriteLine("");
             Console.WriteLine("監視対象のフォルダ：");
@@ -60,22 +65,58 @@ namespace DynamicSourceWatcher
             // qが入力されたら終了する
             while (Console.Read() != 'q') ;
         }
-
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            Process proc = new Process();
 
-            // 
+            // Changedメソッドが2回発行されてしまうので1回だけ実行するようにフラグで管理する
             if (this.executed)
             {
-            	this.executed = false;
-            	return;
+                this.executed = false;
+                return;
             }
+
+            StartCheck(e.FullPath);
+
+            this.executed = true;
+        }
+
+        private void OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            this.deletedFile = e.FullPath;
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e)
+        {
+            // Visual Studio2015ではDelete -> Renameの順でイベントが起きる
+            // DeleteとRenameのファイル名が一緒ならばCppcheckを実行する
+            if (this.deletedFile != "" && this.deletedFile != e.FullPath)
+            {
+                this.deletedFile = "";
+                return;
+            }
+
+            // Visual Studio2019ではTMPファイルへのRename -> cppへのRename が発生する
+            // cppファイルへのRename発生時のみCppcheckを実行する
+            if (Path.GetExtension(e.Name).ToLower() != ".cpp")
+            {
+                return;
+            }
+
+            StartCheck(e.FullPath);
+
+            this.deletedFile = "";
+        }
+
+        private void StartCheck(string fullPath)
+        {
+            Process proc = new Process();
+            String checkLevel = "--enable=" + Properties.Settings.Default.checklevel;
+            String format     = "--template=" + Properties.Settings.Default.format;
 
             // 更新のあったファイルに対してcppcheckを実行する
             Console.ForegroundColor = ConsoleColor.Cyan;
             proc.StartInfo.FileName = Properties.Settings.Default.cppcheck_exe;
-            proc.StartInfo.Arguments = "--enable=warning,style --template=vs " + e.FullPath;
+            proc.StartInfo.Arguments = checkLevel + " " + format + " " + fullPath;
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.RedirectStandardOutput = true;
             proc.Start();
@@ -83,8 +124,7 @@ namespace DynamicSourceWatcher
             Console.ResetColor();
 
             Console.WriteLine("==========End==========");
-
-            this.executed = true;
         }
+
     }
 }
